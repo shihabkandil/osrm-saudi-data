@@ -17,14 +17,21 @@ Download the files from [Releases](../../releases).
 
 ## Install on a server
 
+The repo is private, so downloads need a fine-grained GitHub token with read-only **Contents** access to this repo. The files are fetched by release asset ID through the API:
+
 ```bash
+read -s -p "GitHub token: " TOKEN; echo
 mkdir -p /tmp/osrm-upload && cd /tmp/osrm-upload
-BASE=https://github.com/shihabkandil/osrm-saudi-data/releases/download/gcc-2026-10-31-saudi
-curl -LO $BASE/osrm-gcc-2026-10-31-saudi-amd64.tar.gz
-curl -LO $BASE/osrm-gcc-2026-10-31-saudi-amd64.tar.gz.sha256
-curl -LO $BASE/server-setup.sh
+API=https://api.github.com/repos/shihabkandil/osrm-saudi-data/releases/assets
+get() { curl -fSL -H "Authorization: Bearer $TOKEN" -H "Accept: application/octet-stream" -o "$2" "$API/$1"; }
+get 713841594 osrm-gcc-2026-10-31-saudi-amd64.tar.gz
+get 713715597 osrm-gcc-2026-10-31-saudi-amd64.tar.gz.sha256
+get 713715594 server-setup.sh
+unset TOKEN
 bash server-setup.sh osrm-gcc-2026-10-31-saudi-amd64.tar.gz
 ```
+
+For another release, list its asset IDs with `gh api repos/shihabkandil/osrm-saudi-data/releases/tags/<tag> -q '.assets[] | "\(.id) \(.name)"'`.
 
 OSRM then listens on `127.0.0.1:5000` with `osrm-routed --algorithm ch --mmap=1` (image `ghcr.io/project-osrm/osrm-backend:v6.0.0`).
 
